@@ -22,13 +22,11 @@ def start_ga():
     print('hi')
 
 def color_from_val(val):
-    match val:
-        case 0:
-            return 'green'
-        case 1:
-            return 'blue'
-        case _:
-            return 'black'
+    if val == 0:
+        return 'green'
+    elif val == 1:
+        return 'blue'
+    return 'black'
 
 def gen_sample_member():
     for y in range(tile_length):
@@ -61,8 +59,6 @@ def update_canvas(member):
     for y in range(tile_length):
         for x in range(tile_length):
             cvs.itemconfig(rects[x][y],fill=color_from_val(member[x][y]))
-    print('hi')
-        #rects[x][y].fill = color_from_val(member_rect[x][y])
     #print(rects)
     #print(member.map)
     #time.sleep(0.1)
