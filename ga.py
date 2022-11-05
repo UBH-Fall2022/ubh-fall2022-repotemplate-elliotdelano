@@ -44,16 +44,17 @@ class member:
 
 class ga:
     mutation_rate = 0.
-    def __init__(self, mutation_rate = 0, pop_size = 25, m_size = 50, gen_stop = 100):
+    def __init__(self, mutation_rate = 0, pop_size = 25, m_size = 50, gen_stop = 100, call_back=lambda arg: None):
         self.m_size = m_size
         ga.mutation_rate = mutation_rate
         self.pop_size = pop_size
         self.gen_stop = gen_stop
+        self.call_back = call_back
 
     #TODO: start function
     def start(self):
         self.new_population()
-        self.run()
+        return self.run()
 
     #TODO: initialize population
     def new_population(self):
@@ -97,9 +98,10 @@ class ga:
         while(not self.stop_condition()):
             self.get_fitness()
             self.order_pop()
-            print(f'Best of gen {self.curr_gen}:')
-            print(self.population[len(self.population)-1].map)
-            print()
+            # print(f'Best of gen {self.curr_gen}:')
+            # print(self.population[len(self.population)-1].map)
+            # print()
+            self.call_back(self.population[len(self.population)-1])
             self.cull_pop()
             self.repopulate()
             self.curr_gen += 1
