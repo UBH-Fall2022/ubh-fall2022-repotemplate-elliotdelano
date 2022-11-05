@@ -1,4 +1,5 @@
 import numpy as np
+from numba import jit, cuda
 
 # main algorithm file 
 # controls the logic behind gentic algorithm
@@ -12,7 +13,6 @@ class member:
         self.map = np.random.randint(0,2, size=(self.size, self.size))
         self.fitness = 0
 
-    #TODO: create two factory functions
     # one for crossing over
     @staticmethod
     def cross_over(par1, par2):
@@ -51,23 +51,50 @@ class ga:
         self.gen_stop = gen_stop
         self.call_back = call_back
 
-    #TODO: start function
     def start(self):
         self.new_population()
         return self.run()
 
-    #TODO: initialize population
     def new_population(self):
         self.population = [member(self.m_size) for i in range(self.pop_size)]
 
-    #TODO: write fitness function
     def get_fitness(self):
         for m in self.population:
             m.fitness = ga.fitness(m.map)
-
+    
     @staticmethod
+    @jit(target_backend='cuda')
     def fitness(map):
-        return np.average(map)
+        water_score = 0
+        land_score = 0
+        # print(map)
+        max_size = len(map)
+        for y in range(len(map)):
+            for x, v in enumerate(map[y]):
+                if v == 0:
+                    total = 0
+                    radius = 4
+                    for i in range(-radius, radius):
+                        for j in range(-radius, radius):
+                            new_y = y + i if y + i < max_size else 0 - i
+                            new_x = x + j if x + j < max_size else 0 - j
+                            total += 1 if map[new_y][new_x] == 1 else 0
+                    land_score += -((total/3.55)-4.51)**2+5
+                elif v== 1:
+                    total = 0
+                    # print(map[y][x])  
+                    radius = 2
+                    for i in range(-radius, radius):
+                        for j in range(-radius, radius):
+                            new_y = y + i if y + i < max_size else 0 - i
+                            new_x = x + j if x + j < max_size else 0 - j
+                            total += 1 if map[new_y][new_x] == 1 else 0
+                    water_score += -((total/3.55)-2.25)**2+5
+
+                
+
+
+        return water_score + land_score / 2
 
     def order_pop(self):
         self.population.sort(key=lambda val: val.fitness)
@@ -99,6 +126,7 @@ class ga:
             self.get_fitness()
             self.order_pop()
             # print(f'Best of gen {self.curr_gen}:')
+            # print(f'fitness - {self.population[len(self.population)-1].fitness}')
             # print(self.population[len(self.population)-1].map)
             # print()
             self.call_back(self.population[len(self.population)-1])
@@ -109,16 +137,12 @@ class ga:
         self.order_pop()
         return self.population[len(self.population)-1]
 
-
-
-    #TODO: check for stop
-    #TODO: stop conditional function
     def stop_condition(self):
         if self.curr_gen > self.gen_stop:
             return True
         return False
 
-# g = ga(m_size=10, mutation_rate=0.02)
+# g = ga(m_size=25, mutation_rate=0.02)
 # g.start()
 
 # par1 = member(10)
