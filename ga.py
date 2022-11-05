@@ -103,7 +103,9 @@ class ga:
             self.cull_pop()
             self.repopulate()
             self.curr_gen += 1
-
+        self.get_fitness()
+        self.order_pop()
+        return self.population[len(self.population)-1]
 
 
 
