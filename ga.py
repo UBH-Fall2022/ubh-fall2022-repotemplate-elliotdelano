@@ -14,18 +14,40 @@ class member:
 
     #TODO: create two factory functions
     # one for crossing over
-    @classmethod
-    def cross_over(cls, par1, par2):
-        return None
+    @staticmethod
+    def cross_over(par1, par2):
+        map_a = par1.map.flatten()
+        map_b = par2.map.flatten()
+        centromere = np.random.choice(range(len(map_a)), 10, replace=False)
+        centromere.sort()
+        centromere = np.insert(centromere, 0, 0)
+        print(centromere)
+        map = []
+        for i in range(len(centromere)):
+            if np.random.rand() > 0.5:
+                mini = map_a[centromere[i]:centromere[i+1] if i < len(centromere) - 1 else len(map_a)]
+                for i in mini:
+                    map.append(i if np.random.rand() > ga.mutation_rate else np.random.randint(0, 2))
+            else:
+                mini = map_b[centromere[i]:centromere[i+1] if i < len(centromere) - 1 else len(map_b)]
+                for i in mini:
+                    map.append(i if np.random.rand() > ga.mutation_rate else np.random.randint(0, 2))
+        map = np.reshape(map, (par1.size, par1.size))
+        return member.from_map(map)
     # one for creating directly from map
     @classmethod
     def from_map(cls, map):
-        return None
+        ob = cls.__new__(cls)
+        ob.map = map
+        ob.size = len(map)
+        ob.fitness = 0
+        return ob
 
 class ga:
+    mutation_rate = 0.
     def __init__(self, mutation_rate = 0, pop_size = 25, m_size = 50, gen_stop = 100):
         self.m_size = m_size
-        self.mutation_rate = mutation_rate
+        ga.mutation_rate = mutation_rate
         self.pop_size = pop_size
         self.gen_stop = gen_stop
 
@@ -69,7 +91,7 @@ class ga:
         if par1 == par2:
             return ga.cross_over(pop)
         return member.cross_over(par1, par2)
-        
+
     #TODO: recursive control function
     def run(self):
         while(not self.stop_condition()):
@@ -85,5 +107,10 @@ class ga:
             return True
         return False
 
-g = ga()
-g.start()
+# g = ga()
+# g.start()
+
+par1 = member(10)
+par2 = member(10)
+child = member.cross_over(par1, par2)
+print(child.map)
