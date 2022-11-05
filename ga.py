@@ -21,7 +21,6 @@ class member:
         centromere = np.random.choice(range(len(map_a)), 10, replace=False)
         centromere.sort()
         centromere = np.insert(centromere, 0, 0)
-        print(centromere)
         map = []
         for i in range(len(centromere)):
             if np.random.rand() > 0.5:
@@ -94,11 +93,19 @@ class ga:
 
     #TODO: recursive control function
     def run(self):
+        self.curr_gen = 0
         while(not self.stop_condition()):
             self.get_fitness()
             self.order_pop()
+            print(f'Best of gen {self.curr_gen}:')
+            print(self.population[len(self.population)-1].map)
+            print()
             self.cull_pop()
             self.repopulate()
+            self.curr_gen += 1
+
+
+
 
     #TODO: check for stop
     #TODO: stop conditional function
@@ -107,10 +114,10 @@ class ga:
             return True
         return False
 
-# g = ga()
+# g = ga(m_size=10, mutation_rate=0.02)
 # g.start()
 
-par1 = member(10)
-par2 = member(10)
-child = member.cross_over(par1, par2)
-print(child.map)
+# par1 = member(10)
+# par2 = member(10)
+# child = member.cross_over(par1, par2)
+# print(child.map)
