@@ -65,7 +65,8 @@ def live_update(member):
 def update_canvas(member):
     for y in range(tile_length):
         for x in range(tile_length):
-            cvs.after(delay,lambda:cvs.itemconfig(rects[x][y],fill=color_from_val(member[x][y])))
+            cvs.itemconfig(rects[x][y],fill=color_from_val(member.map[x][y]))
+    cvs.update()
     #print(rects)
     #print(member.map)
     #time.sleep(0.1)
@@ -115,10 +116,10 @@ def start():
     pop_amt = int(pop_amt_str.get())
     gen_amt = int(gen_amt_str.get())
     g = ga(m_size=tile_length, mutation_rate=mut_amt,
-    call_back=queue_update,pop_size=pop_amt,gen_stop=gen_amt)
+    call_back=update_canvas,pop_size=pop_amt,gen_stop=gen_amt)
 
     final = g.start()
-    queue_update(final)
+    update_canvas(final)
 
 
 startbtn = tk.Button(win,text='Start',command=start)
