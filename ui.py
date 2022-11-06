@@ -65,7 +65,7 @@ def live_update(member):
 def update_canvas(member):
     for y in range(tile_length):
         for x in range(tile_length):
-            cvs.itemconfig(rects[x][y],fill=color_from_val(member[x][y]))
+            cvs.after(delay,lambda:cvs.itemconfig(rects[x][y],fill=color_from_val(member[x][y])))
     #print(rects)
     #print(member.map)
     #time.sleep(0.1)
