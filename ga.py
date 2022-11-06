@@ -90,7 +90,7 @@ class ga:
 
     def start(self):
         self.new_population()
-        return self.run2()
+        return self.run()
 
     def new_population(self):
         self.population = [member(self.m_size) for i in range(self.pop_size)]
@@ -216,7 +216,6 @@ class ga:
         self.curr_gen = 0
         self.ftn_track = []
         while(not self.stop_condition()):
-            drawn = False
             self.get_fitness()
             self.order_pop()
             print(f'Best of gen {self.curr_gen}:')
@@ -224,28 +223,10 @@ class ga:
             self.ftn_track.append(self.population[len(self.population)-1].fitness)
             # print(self.population[len(self.population)-1].map)
             # print()
-            drawn = self.call_back(self.population[len(self.population)-1])
+            self.call_back(self.population[len(self.population)-1])
             self.cull_pop()
             self.repopulate()
             self.curr_gen += 1
-        self.get_fitness()
-        self.order_pop()
-        return self.population[len(self.population)-1]
-
-    def run2(self):
-        if(not self.stop_condition()):
-            self.get_fitness()
-            self.order_pop()
-            print(f'Best of gen {self.curr_gen}:')
-            print(f'fitness - {self.population[len(self.population)-1].fitness}')
-            self.ftn_track.append(self.population[len(self.population)-1].fitness)
-            # print(self.population[len(self.population)-1].map)
-            # print()
-            self.call_back(self.population[len(self.population)-1], self.run2)
-            self.cull_pop()
-            self.repopulate()
-            self.curr_gen += 1
-            return
         self.get_fitness()
         self.order_pop()
         return self.population[len(self.population)-1]
