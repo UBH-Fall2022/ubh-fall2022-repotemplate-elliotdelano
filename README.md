@@ -1,3 +1,6 @@
+# To start program:
+run ```ui.py```
+
 # UB Hacking Fall 2022 Rules 
 - Teams can consist of between 1 and 4 people.
 - To have your submission be considered for judging, you must submit a 2-5 minute video along with your project. Try to keep it as concise as possible!

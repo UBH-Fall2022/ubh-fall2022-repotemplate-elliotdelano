@@ -26,11 +26,11 @@ delay = 2000
 
 
 def color_from_val(val):
-    if val == 0:
+    if val == 2:
         return 'green'
     elif val == 1:
         return 'deepskyblue'
-    elif val == 2:
+    elif val == 0:
         return 'goldenrod'
     return 'black'
 
