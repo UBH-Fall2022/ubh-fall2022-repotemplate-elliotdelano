@@ -45,7 +45,7 @@ def find_flood_score(map):
 class member:
     def __init__(self, size):
         self.size = size
-        self.map = np.random.randint(0,2, size=(self.size, self.size))
+        self.map = np.random.randint(0,3, size=(self.size, self.size))
         self.fitness = 0
 
     # one for crossing over
@@ -104,6 +104,8 @@ class ga:
     def fitness(map):
         water_score = 0
         land_score = 0
+        desert_score = 0
+
         # print(map)
         max_size = len(map)
 
@@ -141,7 +143,7 @@ class ga:
                             if str(y)+str(x-1) not in flooded:
                                 queue.append((y, x-1))
                 flood_score.append(total)
-        flood_score = sum(flood_score)/len(flood_score) / (len(map)**2)
+        flood_score = sum(flood_score)
         ##################################
         ##################################
 
@@ -154,7 +156,7 @@ class ga:
                         for j in range(-radius, radius):
                             new_y = y + i if y + i < max_size else 0 - i
                             new_x = x + j if x + j < max_size else 0 - j
-                            total += 1 if map[new_y][new_x] == 1 else 0
+                            total += 1 if map[new_y][new_x] == 0 else 0
                     land_score += total / (radius**2)
                 elif v== 1:
                     total = 0
@@ -164,14 +166,25 @@ class ga:
                         for j in range(-radius, radius):
                             new_y = y + i if y + i < max_size else 0 - i
                             new_x = x + j if x + j < max_size else 0 - j
-                            total += 1 if map[new_y][new_x] == 1 else 10
+                            total += 1 if map[new_y][new_x] == 1 else 0
                     water_score += total / (radius**2)
+                elif v== 2:
+                    total = 0
+                    # print(map[y][x])  
+                    radius = 10
+                    for i in range(-radius, radius):
+                        for j in range(-radius, radius):
+                            new_y = y + i if y + i < max_size else 0 - i
+                            new_x = x + j if x + j < max_size else 0 - j
+                            total += 1 if map[new_y][new_x] == 2 else 0
+                    desert_score += total / (radius**2)
 
                 
 
 
         # return (water_score + flood_score) / 2 + land_score / 2
-        return flood_score + water_score / len(map)**2 + land_score / len(map)**2
+        # return flood_score + water_score / max_size**2 + land_score / max_size**2
+        return (flood_score / max_size**2) / 2 * (land_score / max_size**2) * (water_score / max_size**2) * (desert_score / max_size**2)
 
     def order_pop(self):
         self.population.sort(key=lambda val: val.fitness)
@@ -203,8 +216,8 @@ class ga:
         while(not self.stop_condition()):
             self.get_fitness()
             self.order_pop()
-            # print(f'Best of gen {self.curr_gen}:')
-            # print(f'fitness - {self.population[len(self.population)-1].fitness}')
+            print(f'Best of gen {self.curr_gen}:')
+            print(f'fitness - {self.population[len(self.population)-1].fitness}')
             self.ftn_track.append(self.population[len(self.population)-1].fitness)
             # print(self.population[len(self.population)-1].map)
             # print()
@@ -220,7 +233,7 @@ class ga:
         if self.curr_gen > self.gen_stop:
             return True
         if len(self.ftn_track) > 25:
-            if abs(self.ftn_track[-5] - self.ftn_track[len(self.ftn_track)-1]) / ((self.ftn_track[-5] + self.ftn_track[len(self.ftn_track)-1]) / 2) < 0.001:
+            if abs(self.ftn_track[-10] - self.ftn_track[len(self.ftn_track)-1]) / ((self.ftn_track[-5] + self.ftn_track[len(self.ftn_track)-1]) / 2) < 0.0005:
                 return True
         return False
 
