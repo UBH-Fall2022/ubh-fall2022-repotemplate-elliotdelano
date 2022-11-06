@@ -7,6 +7,41 @@ from numba import jit, cuda
 # fitness functions
 # crossing over
 
+@jit(target_backend='cuda')
+def find_flood_score(map):
+    flood_score = []
+    flooded = {}
+    for y_in in range(len(map)):
+        for x_in, v in enumerate(map[y_in]):
+            if v != 1: continue
+            if str(y_in)+str(x_in) in flooded: continue
+            flooded[str(y_in)+str(x_in)] = 1
+            total = 0
+            queue = []
+            queue.append((y_in,x_in))
+            while(len(queue)>0):
+                y, x = queue.pop()
+                total+=1
+                flooded[str(y)+str(x)] = 1
+                if y + 1 < len(map):
+                    if map[y+1][x] == 1:
+                        if str(y+1)+str(x) not in flooded:
+                            queue.append((y+1, x))
+                if y - 1 > -1:
+                    if map[y-1][x] == 1:
+                        if str(y-1)+str(x) not in flooded:
+                            queue.append((y-1, x))
+                if x + 1 < len(map):
+                    if map[y][x+1] == 1:
+                        if str(y)+str(x+1) not in flooded:
+                            queue.append((y, x+1))
+                if x - 1 > -1:
+                    if map[y][x-1] == 1:
+                        if str(y)+str(x-1) not in flooded:
+                            queue.append((y, x-1))
+            flood_score.append(total)
+    return sum(flood_score)/len(flood_score)
+
 class member:
     def __init__(self, size):
         self.size = size
@@ -62,6 +97,8 @@ class ga:
         for m in self.population:
             m.fitness = ga.fitness(m.map)
     
+   
+    # 
     @staticmethod
     @jit(target_backend='cuda')
     def fitness(map):
@@ -69,32 +106,74 @@ class ga:
         land_score = 0
         # print(map)
         max_size = len(map)
+
+        # flood_score = find_flood_score(map)
+        ##############################
+        ##############################
+        flood_score = []
+        flooded = {}
+        for y_in in range(len(map)):
+            for x_in, v in enumerate(map[y_in]):
+                if v != 1: continue
+                if str(y_in)+str(x_in) in flooded: continue
+                flooded[str(y_in)+str(x_in)] = 1
+                total = 0
+                queue = []
+                queue.append((y_in,x_in))
+                while(len(queue)>0):
+                    y, x = queue.pop()
+                    total+=1
+                    flooded[str(y)+str(x)] = 1
+                    if y + 1 < len(map):
+                        if map[y+1][x] == 1:
+                            if str(y+1)+str(x) not in flooded:
+                                queue.append((y+1, x))
+                    if y - 1 > -1:
+                        if map[y-1][x] == 1:
+                            if str(y-1)+str(x) not in flooded:
+                                queue.append((y-1, x))
+                    if x + 1 < len(map):
+                        if map[y][x+1] == 1:
+                            if str(y)+str(x+1) not in flooded:
+                                queue.append((y, x+1))
+                    if x - 1 > -1:
+                        if map[y][x-1] == 1:
+                            if str(y)+str(x-1) not in flooded:
+                                queue.append((y, x-1))
+                flood_score.append(total)
+        flood_score = sum(flood_score)/len(flood_score) * 10
+        ##################################
+        ##################################
+
         for y in range(len(map)):
             for x, v in enumerate(map[y]):
                 if v == 0:
                     total = 0
-                    radius = 4
+                    radius = 10
                     for i in range(-radius, radius):
                         for j in range(-radius, radius):
                             new_y = y + i if y + i < max_size else 0 - i
                             new_x = x + j if x + j < max_size else 0 - j
                             total += 1 if map[new_y][new_x] == 1 else 0
-                    land_score += -((total/3.55)-4.51)**2+5
+                    fit = total
+                    land_score += fit if fit >= 0 else 0
                 elif v== 1:
                     total = 0
                     # print(map[y][x])  
-                    radius = 2
+                    radius = 3
                     for i in range(-radius, radius):
                         for j in range(-radius, radius):
                             new_y = y + i if y + i < max_size else 0 - i
                             new_x = x + j if x + j < max_size else 0 - j
-                            total += 1 if map[new_y][new_x] == 1 else 0
-                    water_score += -((total/3.55)-2.25)**2+5
+                            total += 1 if map[new_y][new_x] == 1 else -2
+                    fit = total
+                    water_score += fit if fit <= 0 else 0
 
                 
 
 
-        return water_score + land_score / 2
+        # return (water_score + flood_score) / 2 + land_score / 2
+        return (flood_score + land_score + water_score / 2)
 
     def order_pop(self):
         self.population.sort(key=lambda val: val.fitness)
@@ -122,11 +201,13 @@ class ga:
     #TODO: recursive control function
     def run(self):
         self.curr_gen = 0
+        self.ftn_track = []
         while(not self.stop_condition()):
             self.get_fitness()
             self.order_pop()
             # print(f'Best of gen {self.curr_gen}:')
             # print(f'fitness - {self.population[len(self.population)-1].fitness}')
+            self.ftn_track.append(self.population[len(self.population)-1].fitness)
             # print(self.population[len(self.population)-1].map)
             # print()
             self.call_back(self.population[len(self.population)-1])
@@ -140,6 +221,9 @@ class ga:
     def stop_condition(self):
         if self.curr_gen > self.gen_stop:
             return True
+        if len(self.ftn_track) > 25:
+            if abs(self.ftn_track[-5] - self.ftn_track[len(self.ftn_track)-1]) / ((self.ftn_track[-5] + self.ftn_track[len(self.ftn_track)-1]) / 2) < 0.001:
+                return True
         return False
 
 # g = ga(m_size=25, mutation_rate=0.02)
@@ -149,3 +233,7 @@ class ga:
 # par2 = member(10)
 # child = member.cross_over(par1, par2)
 # print(child.map)
+
+# m = member(10)
+# print(find_flood_score(m.map))
+# print(m.map)
