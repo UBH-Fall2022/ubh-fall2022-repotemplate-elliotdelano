@@ -8,6 +8,34 @@ from numba import jit, cuda
 # crossing over
 
 @jit(target_backend='cuda')
+def flood_score(y,x, m, type):
+    flooded = {}
+    queue = []
+    queue.append((y,x))
+    total = 0
+    while(len(queue)>0):
+        y, x = queue.pop()
+        total+=1
+        flooded[str(y)+str(x)] = 1
+        if y + 1 < len(m):
+            if m[y+1][x] == type:
+                if str(y+1)+str(x) not in flooded:
+                    queue.append((y+1, x))
+        if y - 1 > -1:
+            if m[y-1][x] == type:
+                if str(y-1)+str(x) not in flooded:
+                    queue.append((y-1, x))
+        if x + 1 < len(m):
+            if m[y][x+1] == type:
+                if str(y)+str(x+1) not in flooded:
+                    queue.append((y, x+1))
+        if x - 1 > -1:
+            if m[y][x-1] == type:
+                if str(y)+str(x-1) not in flooded:
+                    queue.append((y, x-1))
+    return total
+
+@jit(target_backend='cuda')
 def find_flood_score(map):
     flood_score = []
     flooded = {}
@@ -45,7 +73,7 @@ def find_flood_score(map):
 class member:
     def __init__(self, size):
         self.size = size
-        self.map = np.random.randint(0,3, size=(self.size, self.size))
+        self.map = np.random.randint(0,2, size=(self.size, self.size))
         self.fitness = 0
 
     # one for crossing over
@@ -145,48 +173,56 @@ class ga:
                             if str(y)+str(x-1) not in flooded:
                                 queue.append((y, x-1))
                 flood_score.append(total)
-        flood_score = sum(flood_score)
+        flood_score = sum(flood_score) / len(flood_score)
         ##################################
         ##################################
-
+        wc = 0.01
+        lc = 0.01
         for y in range(len(map)):
             for x, v in enumerate(map[y]):
                 if v == 0:
                     total = 0
-                    radius = 10
+                    radius = 3
                     for i in range(-radius, radius):
                         for j in range(-radius, radius):
                             new_y = y + i if y + i < max_size else 0 - i
                             new_x = x + j if x + j < max_size else 0 - j
                             total += 1 if map[new_y][new_x] == 0 else 0
                     land_score += total / (radius**2)
+                    lc += 1
                 elif v== 1:
                     total = 0
                     # print(map[y][x])  
-                    radius = 3
+                    radius = 5
                     for i in range(-radius, radius):
-                        for j in range(-radius, radius):
+                        for j in range(-radius, radius):    
+                            if -3 < j < 3 or -3 < i < 3: continue
                             new_y = y + i if y + i < max_size else 0 - i
                             new_x = x + j if x + j < max_size else 0 - j
-                            total += 2 if map[new_y][new_x] == 1 else 0
-                    water_score += total / (radius**2)
+                            total += 0 if map[new_y][new_x] == 1 else 3
+                            water_score += total / radius**2
+                    wc+=1
                 elif v== 2:
-                    total = 0
-                    # print(map[y][x])  
-                    radius = 10
-                    for i in range(-radius, radius):
-                        for j in range(-radius, radius):
-                            new_y = y + i if y + i < max_size else 0 - i
-                            new_x = x + j if x + j < max_size else 0 - j
-                            total += 2 if map[new_y][new_x] == 2 else 1 if map[new_y][new_x] == 0 else 0
-                    desert_score += total / (radius**2)
+                    # total = 0
+                    # # print(map[y][x])  
+                    # radius = 10
+                    # for i in range(-radius, radius):
+                    #     for j in range(-radius, radius):
+                    #         new_y = y + i if y + i < max_size else 0 - i
+                    #         new_x = x + j if x + j < max_size else 0 - j
+                    #         total += 2 if map[new_y][new_x] == 2 else 1 if map[new_y][new_x] == 0 else 0
+                    # desert_score += total / (radius**2)
+                    # desert_score += flood_score(y,x,map,v)
+                    lc += 1
 
                 
 
 
         # return (water_score + flood_score) / 2 + land_score / 2
         # return flood_score + water_score / max_size**2 + land_score / max_size**2
-        return (flood_score / max_size**2) / 2 + (land_score / max_size**2) + (desert_score / max_size**2)
+        # return ((land_score) + (desert_score))*(0.666 / (lc/(max_size**2))) + (water_score)*(0.333 / wc/(max_size**2))
+        # return (max_size**2 - wc) + flood_score + water_score + land_score
+        return (max_size**2 - wc) + flood_score / land_score + water_score
 
     def order_pop(self):
         self.population.sort(key=lambda val: val.fitness)
@@ -218,8 +254,8 @@ class ga:
         while(not self.stop_condition()):
             self.get_fitness()
             self.order_pop()
-            # print(f'Best of gen {self.curr_gen}:')
-            # print(f'fitness - {self.population[len(self.population)-1].fitness}')
+            print(f'Best of gen {self.curr_gen}:')
+            print(f'fitness - {self.population[len(self.population)-1].fitness}')
             self.ftn_track.append(self.population[len(self.population)-1].fitness)
             # print(self.population[len(self.population)-1].map)
             # print()
@@ -235,7 +271,7 @@ class ga:
         if self.curr_gen > self.gen_stop:
             return True
         if len(self.ftn_track) > 25:
-            if abs(self.ftn_track[-10] - self.ftn_track[len(self.ftn_track)-1]) / ((self.ftn_track[-10] + self.ftn_track[len(self.ftn_track)-1]) / 2) < 0.0005:
+            if abs(self.ftn_track[-10] - self.ftn_track[len(self.ftn_track)-1]) / abs((self.ftn_track[-10] + self.ftn_track[len(self.ftn_track)-1]) / 2) < 0.000000005:
                 return True
         return False
 
@@ -248,5 +284,5 @@ class ga:
 # print(child.map)
 
 # m = member(10)
-# print(find_flood_score(m.map))
+# print(flood_score(5,5, m.map, 1))
 # print(m.map)
