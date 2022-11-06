@@ -85,10 +85,12 @@ class ga:
         self.pop_size = pop_size
         self.gen_stop = gen_stop
         self.call_back = call_back
+        self.curr_gen = 0
+        self.ftn_track = []
 
     def start(self):
         self.new_population()
-        return self.run()
+        return self.run2()
 
     def new_population(self):
         self.population = [member(self.m_size) for i in range(self.pop_size)]
@@ -166,7 +168,7 @@ class ga:
                         for j in range(-radius, radius):
                             new_y = y + i if y + i < max_size else 0 - i
                             new_x = x + j if x + j < max_size else 0 - j
-                            total += 1 if map[new_y][new_x] == 1 else 0
+                            total += 2 if map[new_y][new_x] == 1 else 0
                     water_score += total / (radius**2)
                 elif v== 2:
                     total = 0
@@ -176,7 +178,7 @@ class ga:
                         for j in range(-radius, radius):
                             new_y = y + i if y + i < max_size else 0 - i
                             new_x = x + j if x + j < max_size else 0 - j
-                            total += 1 if map[new_y][new_x] == 2 else 0
+                            total += 2 if map[new_y][new_x] == 2 else 1 if map[new_y][new_x] == 0 else 0
                     desert_score += total / (radius**2)
 
                 
@@ -184,7 +186,7 @@ class ga:
 
         # return (water_score + flood_score) / 2 + land_score / 2
         # return flood_score + water_score / max_size**2 + land_score / max_size**2
-        return (flood_score / max_size**2) / 2 * (land_score / max_size**2) * (water_score / max_size**2) * (desert_score / max_size**2)
+        return (flood_score / max_size**2) / 2 + (land_score / max_size**2) + (desert_score / max_size**2)
 
     def order_pop(self):
         self.population.sort(key=lambda val: val.fitness)
@@ -214,6 +216,7 @@ class ga:
         self.curr_gen = 0
         self.ftn_track = []
         while(not self.stop_condition()):
+            drawn = False
             self.get_fitness()
             self.order_pop()
             print(f'Best of gen {self.curr_gen}:')
@@ -221,10 +224,28 @@ class ga:
             self.ftn_track.append(self.population[len(self.population)-1].fitness)
             # print(self.population[len(self.population)-1].map)
             # print()
-            self.call_back(self.population[len(self.population)-1])
+            drawn = self.call_back(self.population[len(self.population)-1])
             self.cull_pop()
             self.repopulate()
             self.curr_gen += 1
+        self.get_fitness()
+        self.order_pop()
+        return self.population[len(self.population)-1]
+
+    def run2(self):
+        if(not self.stop_condition()):
+            self.get_fitness()
+            self.order_pop()
+            print(f'Best of gen {self.curr_gen}:')
+            print(f'fitness - {self.population[len(self.population)-1].fitness}')
+            self.ftn_track.append(self.population[len(self.population)-1].fitness)
+            # print(self.population[len(self.population)-1].map)
+            # print()
+            self.call_back(self.population[len(self.population)-1], self.run2)
+            self.cull_pop()
+            self.repopulate()
+            self.curr_gen += 1
+            return
         self.get_fitness()
         self.order_pop()
         return self.population[len(self.population)-1]
