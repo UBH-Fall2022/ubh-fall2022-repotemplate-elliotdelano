@@ -218,8 +218,8 @@ class ga:
         while(not self.stop_condition()):
             self.get_fitness()
             self.order_pop()
-            print(f'Best of gen {self.curr_gen}:')
-            print(f'fitness - {self.population[len(self.population)-1].fitness}')
+            # print(f'Best of gen {self.curr_gen}:')
+            # print(f'fitness - {self.population[len(self.population)-1].fitness}')
             self.ftn_track.append(self.population[len(self.population)-1].fitness)
             # print(self.population[len(self.population)-1].map)
             # print()
@@ -235,7 +235,7 @@ class ga:
         if self.curr_gen > self.gen_stop:
             return True
         if len(self.ftn_track) > 25:
-            if abs(self.ftn_track[-10] - self.ftn_track[len(self.ftn_track)-1]) / ((self.ftn_track[-5] + self.ftn_track[len(self.ftn_track)-1]) / 2) < 0.0005:
+            if abs(self.ftn_track[-10] - self.ftn_track[len(self.ftn_track)-1]) / ((self.ftn_track[-10] + self.ftn_track[len(self.ftn_track)-1]) / 2) < 0.0005:
                 return True
         return False
 
