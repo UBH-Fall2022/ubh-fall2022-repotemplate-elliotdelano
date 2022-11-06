@@ -141,7 +141,7 @@ class ga:
                             if str(y)+str(x-1) not in flooded:
                                 queue.append((y, x-1))
                 flood_score.append(total)
-        flood_score = sum(flood_score)/len(flood_score) * 10
+        flood_score = sum(flood_score)/len(flood_score) / (len(map)**2)
         ##################################
         ##################################
 
@@ -155,8 +155,7 @@ class ga:
                             new_y = y + i if y + i < max_size else 0 - i
                             new_x = x + j if x + j < max_size else 0 - j
                             total += 1 if map[new_y][new_x] == 1 else 0
-                    fit = total
-                    land_score += fit if fit >= 0 else 0
+                    land_score += total / (radius**2)
                 elif v== 1:
                     total = 0
                     # print(map[y][x])  
@@ -165,15 +164,14 @@ class ga:
                         for j in range(-radius, radius):
                             new_y = y + i if y + i < max_size else 0 - i
                             new_x = x + j if x + j < max_size else 0 - j
-                            total += 1 if map[new_y][new_x] == 1 else -2
-                    fit = total
-                    water_score += fit if fit <= 0 else 0
+                            total += 1 if map[new_y][new_x] == 1 else 10
+                    water_score += total / (radius**2)
 
                 
 
 
         # return (water_score + flood_score) / 2 + land_score / 2
-        return (flood_score + land_score + water_score / 2)
+        return flood_score + water_score / len(map)**2 + land_score / len(map)**2
 
     def order_pop(self):
         self.population.sort(key=lambda val: val.fitness)
