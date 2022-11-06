@@ -1,4 +1,3 @@
-from glob import glob
 import random
 import time
 import tkinter as tk
@@ -22,14 +21,13 @@ gen_rects = []
 delay = 2000
 
 
-def start_ga():
-    print('hi')
-
 def color_from_val(val):
     if val == 0:
         return 'green'
     elif val == 1:
         return 'deepskyblue'
+    elif val == 2:
+        return 'goldenrod'
     return 'black'
 
 def gen_sample_member():
@@ -107,6 +105,9 @@ def start():
     global tile_length
     global tile_size
 
+    global gen_rects
+    gen_rects = []
+
     tile_length = int(tile_length_str.get())
     tile_size = min(win_y,win_x)/tile_length
 
@@ -114,10 +115,10 @@ def start():
     pop_amt = int(pop_amt_str.get())
     gen_amt = int(gen_amt_str.get())
     g = ga(m_size=tile_length, mutation_rate=mut_amt,
-    call_back=live_update,pop_size=pop_amt,gen_stop=gen_amt)
+    call_back=queue_update,pop_size=pop_amt,gen_stop=gen_amt)
 
     final = g.start()
-    live_update(final)
+    queue_update(final)
 
 
 startbtn = tk.Button(win,text='Start',command=start)
