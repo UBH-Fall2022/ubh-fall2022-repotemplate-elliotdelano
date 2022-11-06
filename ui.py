@@ -11,9 +11,9 @@ win_x = 800
 win_y = 600
 tile_length = 20
 tile_size = min(win_y,win_x)/tile_length
-gen_amt = 100
-mut_amt = 0.02
-pop_amt = 25
+gen_amt = 250
+mut_amt = 0.03
+pop_amt = 50
 plot_size = 150
 gen = 0
 

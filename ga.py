@@ -73,7 +73,7 @@ def find_flood_score(map):
 class member:
     def __init__(self, size):
         self.size = size
-        self.map = np.random.randint(0,2, size=(self.size, self.size))
+        self.map = np.random.randint(0,3, size=(self.size, self.size))
         self.fitness = 0
 
     # one for crossing over
@@ -203,16 +203,15 @@ class ga:
                             water_score += total / radius**2
                     wc+=1
                 elif v== 2:
-                    # total = 0
-                    # # print(map[y][x])  
-                    # radius = 10
-                    # for i in range(-radius, radius):
-                    #     for j in range(-radius, radius):
-                    #         new_y = y + i if y + i < max_size else 0 - i
-                    #         new_x = x + j if x + j < max_size else 0 - j
-                    #         total += 2 if map[new_y][new_x] == 2 else 1 if map[new_y][new_x] == 0 else 0
-                    # desert_score += total / (radius**2)
-                    # desert_score += flood_score(y,x,map,v)
+                    total = 0
+                    # print(map[y][x])  
+                    radius = 1
+                    for i in range(-radius, radius):
+                        for j in range(-radius, radius):
+                            new_y = y + i if y + i < max_size else 0 - i
+                            new_x = x + j if x + j < max_size else 0 - j
+                            total += 3 if map[new_y][new_x] == 2 else 1 if map[new_y][new_x] == 0 else -10
+                    desert_score += total / (radius**2)
                     lc += 1
 
                 
@@ -222,7 +221,7 @@ class ga:
         # return flood_score + water_score / max_size**2 + land_score / max_size**2
         # return ((land_score) + (desert_score))*(0.666 / (lc/(max_size**2))) + (water_score)*(0.333 / wc/(max_size**2))
         # return (max_size**2 - wc) + flood_score + water_score + land_score
-        return (max_size**2 - wc) + flood_score / land_score + water_score
+        return (max_size**2 - wc)*5 + flood_score / land_score + water_score + desert_score*2
 
     def order_pop(self):
         self.population.sort(key=lambda val: val.fitness)
